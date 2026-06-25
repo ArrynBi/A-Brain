@@ -1,0 +1,28 @@
+{
+  "document": "knowledge/notes/example.md",
+  "confidenceFormulaVersion": "a-brain-confidence-v1",
+  "claims": [
+    {
+      "id": "claim-001",
+      "text": "Example claim.",
+      "claimType": "general",
+      "confidenceScore": 50,
+      "confidenceFactors": {
+        "sourceSupport": 0,
+        "citationCoverageWeight": 0,
+        "reviewStateWeight": 0,
+        "userConfirmationWeight": 0,
+        "inferenceStateWeight": 0,
+        "unresolvedConflictWeight": 0,
+        "freshnessPenalty": 0,
+        "modelJudgeWeight": 0
+      },
+      "confidenceEvents": [],
+      "provenanceState": "imported",
+      "inferenceState": "mixed",
+      "reviewState": "draft",
+      "citations": [],
+      "contradictedBy": []
+    }
+  ]
+}

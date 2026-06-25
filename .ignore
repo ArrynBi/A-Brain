@@ -1,0 +1,19 @@
+# Runtime-generated artifacts ignored by ripgrep and local hygiene scans
+config/*.local.json
+diary/events/*.jsonl
+diary/turns/*.json
+diary/turns/*.jsonl
+diary/sessions/*.json
+diary/sessions/*.jsonl
+ingest/runs/*.json
+ingest/runs/*.md
+ingest/manifests/*.json
+ingest/manifests/*.md
+think/indexes/*.json
+think/reports/*.json
+dream/reports/*.md
+dream/review/reports/*.md
+dream/lint/*.json
+dream/lint/*.md
+dream/correction/*.json
+dream/correction/*.md

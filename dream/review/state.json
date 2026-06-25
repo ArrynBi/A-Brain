@@ -1,0 +1,17 @@
+{
+  "schema": "a-brain-dream-review-state-v1",
+  "updatedAt": null,
+  "counts": {
+    "draft": 0,
+    "pending_auto_review": 0,
+    "pending_human_review": 0,
+    "needs_source": 0,
+    "needs_revision": 0,
+    "accepted": 0,
+    "promoted": 0,
+    "rejected": 0,
+    "stale": 0,
+    "disputed": 0,
+    "superseded": 0
+  }
+}

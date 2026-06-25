@@ -1,0 +1,92 @@
+{
+  "version": "0.1.0-beta.1",
+  "root": ".",
+  "language": "zh-CN",
+  "diary": {
+    "eventStore": "diary/events/events.jsonl",
+    "turnsDir": "diary/turns",
+    "sessionsDir": "diary/sessions"
+  },
+  "knowledge": {
+    "root": "knowledge",
+    "claimSidecarDir": "knowledge/.claims",
+    "schemaStateDefault": "legacy"
+  },
+  "library": {
+    "root": "library",
+    "sourcesDir": "library/sources"
+  },
+  "ingest": {
+    "runsDir": "ingest/runs",
+    "manifestsDir": "ingest/manifests",
+    "conceptCandidatesDir": "ingest/candidates/concepts",
+    "queueDreamReview": true
+  },
+  "think": {
+    "mode": "local-text",
+    "defaultOutput": "auto",
+    "indexesDir": "think/indexes",
+    "reportsDir": "think/reports",
+    "adaptersDir": "think/adapters",
+    "refreshThresholds": {
+      "forceChangedFiles": 20,
+      "suggestChangedFilesMin": 5,
+      "lowHitStreak": 5
+    }
+  },
+  "dream": {
+    "reviewQueue": "dream/review/queue.json",
+    "reviewState": "dream/review/state.json",
+    "reviewStates": [
+      "draft",
+      "pending_auto_review",
+      "pending_human_review",
+      "needs_source",
+      "needs_revision",
+      "accepted",
+      "promoted",
+      "rejected",
+      "stale",
+      "disputed",
+      "superseded"
+    ],
+    "reportsDir": "dream/reports",
+    "lintDir": "dream/lint",
+    "correctionDir": "dream/correction"
+  },
+  "learn": {
+    "candidatesDir": "learn/candidates",
+    "promotedDir": "learn/promoted",
+    "requiresUserInitiation": true
+  },
+  "confidence": {
+    "formulaVersion": "a-brain-confidence-v1",
+    "baseLogit": -0.4,
+    "weights": {
+      "sourceSupport": 1.2,
+      "citationCoverage": {
+        "none": -1.0,
+        "partial": -0.35,
+        "good": 0.25,
+        "full": 0.55
+      },
+      "reviewState": {
+        "promoted": 1.2,
+        "accepted": 0.9,
+        "draft": -0.2
+      },
+      "inferenceState": {
+        "direct": 0.35,
+        "inferred": -0.55,
+        "speculative": -1.25
+      },
+      "unresolvedConflict": -1.4,
+      "freshnessPenalty": -0.8
+    },
+    "reviewGate": {
+      "suggestHumanAcceptMin": 85,
+      "needsHumanReviewBelow": 70,
+      "holdBelow": 40
+    }
+  }
+}
