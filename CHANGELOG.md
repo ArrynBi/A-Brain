@@ -2,11 +2,11 @@
 
 All notable changes to A-Brain will be documented in this file.
 
-The format is based on Keep a Changelog, and this project uses Semantic Versioning for public releases.
+The format is based on Keep a Changelog, and this project uses Semantic Versioning.
 
 ## [Unreleased]
 
-- Reserve this section for post-beta work on adapters, stronger ingest, and personal overlays.
+- Reserve this section for post-beta work on adapters, stronger ingest, and overlays.
 
 ## [0.1.0-beta.1] - 2026-06-25
 
@@ -20,7 +20,7 @@ The format is based on Keep a Changelog, and this project uses Semantic Versioni
 
 ### Changed
 
-- Public text-index mode is labeled `local-text`.
+- The text-index mode is labeled `local-text`.
 - README, bootstrap, commands, and release docs now describe a beta-ready runnable template instead of a scaffold-only state.
 
 ### Safety

@@ -1,8 +1,8 @@
-# Review And Confidence
+# 审核与置信度
 
-A-Brain treats confidence as a governance signal. It helps decide what to review, how to rank search results, and when to warn the user. It is not an absolute truth score.
+A-Brain 将 `confidence` 视为审核与使用信号。它用于决定哪些内容需要复审、检索结果如何排序，以及什么时候需要给出额外提醒。它不是事实真伪的绝对分数。
 
-## Score
+## 分数区间
 
 ```text
 0-39    enter dream review; do not cite as stable fact
@@ -12,7 +12,7 @@ A-Brain treats confidence as a governance signal. It helps decide what to review
 any     unresolved contradictedBy means disputed
 ```
 
-## Formula
+## 计算方式
 
 ```text
 z = -0.40
@@ -28,23 +28,23 @@ z = -0.40
 confidenceScore = round(100 / (1 + exp(-z)))
 ```
 
-Weights live in `config/a-brain.json`, not inside claims.
+权重配置保存在 `config/a-brain.json` 中，不直接写在 claims 里。
 
-## Factors And Events
+## 因子与事件
 
-`confidenceFactors` stores current factor values for a claim. `confidenceEvents` records why factors changed.
+`confidenceFactors` 用来保存一个 claim 当前的因子数值，`confidenceEvents` 用来记录这些因子为什么发生变化。
 
-Examples:
+常见来源：
 
-- `ingest` adds source support and citation coverage.
-- `think` adds user confirmation when a user explicitly accepts an answer.
-- `dream-review` updates review state after human decision.
-- `dream-fix` adds negative-event review inputs for contradiction, stale claim, or broken citation in its preview workflow.
-- `learn` can add reuse support when knowledge becomes part of a promoted skill.
+- `ingest` 会增加 source support 和 citation coverage。
+- `think` 会在用户明确认可结果时增加 user confirmation。
+- `dream-review` 会在人工决策后更新 review state。
+- `dream-fix` 会在预览流程中加入 contradiction、stale claim 或 broken citation 之类的负向审核信号。
+- `learn` 会在知识进入 promoted skill 时增加复用信号。
 
-## Page Vs Claim
+## 页面与 claim
 
-Page frontmatter should remain compact:
+页面 frontmatter 建议保持精简：
 
 ```yaml
 confidenceScore: 72
@@ -54,13 +54,13 @@ claimSetPath: knowledge/.claims/example.claims.json
 confidenceClaimRefs: [claim-001, claim-003]
 ```
 
-Detailed factors and events belong in a claim block or sidecar JSON.
+更细的因子和事件建议放在 claim block 或 sidecar JSON 中。
 
 ## Dream Review
 
-All reviewable items go through `dream/review`. There is no standalone `review` module and no separate review queue owned by `learn`.
+所有可审核内容都通过 `dream/review` 处理。A-Brain 不提供独立的 `review` 模块，也不会为 `learn` 单独维护第二套审核队列。
 
-Review states:
+审核状态：
 
 ```text
 draft
@@ -76,4 +76,4 @@ disputed
 superseded
 ```
 
-Important human decisions must write a diary event.
+重要的人工决策应写入 diary event。

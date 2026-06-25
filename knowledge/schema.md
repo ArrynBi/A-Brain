@@ -1,10 +1,10 @@
 # A-Brain Schema
 
-This file defines the v1 document contracts used by `knowledge`, `ingest`, `think`, `dream`, and `learn`.
+本文件定义了 A-Brain 当前版本使用的文档约定，覆盖 `knowledge`、`ingest`、`think`、`dream` 和 `learn`。
 
 ## Page Frontmatter
 
-Page frontmatter should stay compact and human-readable.
+页面 frontmatter 建议保持精简，并尽量保证人类可读。
 
 ```yaml
 ---
@@ -37,11 +37,11 @@ sourceHashes: []
 ---
 ```
 
-Page-level `confidenceScore` is aggregated from claims. Do not store full `confidenceFactors` or `confidenceEvents` in frontmatter unless the document has only one tiny claim.
+页面级 `confidenceScore` 由 claim 聚合而来。除非文档只有一个很小的 claim，否则不建议把完整的 `confidenceFactors` 或 `confidenceEvents` 放进 frontmatter。
 
 ## Claim Block
 
-Small documents can embed claims in Markdown. Larger documents should use sidecar JSON under `knowledge/.claims`.
+较小的文档可以直接在 Markdown 中嵌入 claims。更大的文档更适合把 claim 放到 `knowledge/.claims` 下的 sidecar JSON 中。
 
 ```yaml
 claims:
@@ -76,9 +76,9 @@ claims:
     contradictedBy: []
 ```
 
-## Numeric Confidence
+## 数值置信度
 
-`confidenceScore` is a governance score, not a proof of truth.
+`confidenceScore` 是一个审核与使用分数，不是真伪证明。
 
 ```text
 z = -0.40
@@ -94,7 +94,7 @@ z = -0.40
 confidenceScore = round(100 / (1 + exp(-z)))
 ```
 
-Recommended interpretation:
+建议按下面的方式理解：
 
 ```text
 0-39    enter dream review; do not cite as stable fact
@@ -147,6 +147,6 @@ sourceQuality: primary | secondary | tertiary | unknown
 }
 ```
 
-## Migration
+## 兼容与迁移
 
-Existing documents may use `schemaState: legacy`. New ingest outputs and new concepts should use `schemaState: compliant` and include claim-level data.
+已有文档可以继续使用 `schemaState: legacy`。新的 ingest 产物和新的 concept 建议使用 `schemaState: compliant`，并带上 claim 级信息。
