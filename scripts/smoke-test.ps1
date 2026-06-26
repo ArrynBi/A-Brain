@@ -17,29 +17,48 @@ function Invoke-SmokeCommand {
   )
 
   $Display = ($File + " " + ($Arguments -join " ")).Trim()
-  $ArgumentList = @($Arguments | ForEach-Object {
-    $Value = [string]$_
-    if ($Value -match '[\s"]') {
-      '"' + ($Value -replace '"', '\"') + '"'
-    } else {
-      $Value
-    }
-  })
   Write-Output ("[run] {0}" -f $Display)
+  $Extension = [System.IO.Path]::GetExtension($File)
+  $ResolvedFile = $File
+  if ($Extension -eq ".cmd") {
+    $ResolvedPs1 = [System.IO.Path]::ChangeExtension($File, ".ps1")
+    if (Test-Path -LiteralPath $ResolvedPs1) {
+      $ResolvedFile = $ResolvedPs1
+    }
+  }
+
   $StdoutFile = Join-Path $env:TEMP ("a-brain-smoke-stdout-" + [guid]::NewGuid().ToString() + ".txt")
   $StderrFile = Join-Path $env:TEMP ("a-brain-smoke-stderr-" + [guid]::NewGuid().ToString() + ".txt")
 
   try {
-    $StartParams = @{
-      FilePath = $File
-      NoNewWindow = $true
-      Wait = $true
-      PassThru = $true
-      RedirectStandardOutput = $StdoutFile
-      RedirectStandardError = $StderrFile
-    }
-    if ($ArgumentList.Count -gt 0) {
-      $StartParams.ArgumentList = $ArgumentList
+    if ([System.IO.Path]::GetExtension($ResolvedFile) -eq ".ps1") {
+      $QuotedArgumentList = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $ResolvedFile) + $Arguments | ForEach-Object {
+        $Value = [string]$_
+        if ($Value -match '[\s"]') {
+          '"' + ($Value -replace '"', '\"') + '"'
+        } else {
+          $Value
+        }
+      }
+      $StartParams = @{
+        FilePath = "powershell.exe"
+        ArgumentList = ($QuotedArgumentList -join " ")
+        NoNewWindow = $true
+        Wait = $true
+        PassThru = $true
+        RedirectStandardOutput = $StdoutFile
+        RedirectStandardError = $StderrFile
+      }
+    } else {
+      $StartParams = @{
+        FilePath = $ResolvedFile
+        ArgumentList = $Arguments
+        NoNewWindow = $true
+        Wait = $true
+        PassThru = $true
+        RedirectStandardOutput = $StdoutFile
+        RedirectStandardError = $StderrFile
+      }
     }
 
     $Process = Start-Process @StartParams
@@ -53,6 +72,10 @@ function Invoke-SmokeCommand {
     }
   } finally {
     Remove-Item -LiteralPath $StdoutFile, $StderrFile -Force -ErrorAction SilentlyContinue
+  }
+
+  if ($null -eq $ExitCode) {
+    $ExitCode = 0
   }
 
   if ($Output) {
@@ -77,24 +100,79 @@ function Assert-JsonParse {
   }
 }
 
-function Assert-OnlyGitkeep {
-  param([string[]]$Paths)
+function Get-DirectorySnapshot {
+  param(
+    [string]$BasePath,
+    [string[]]$Paths
+  )
+
+  $Snapshot = @()
+  $Sha256 = [System.Security.Cryptography.SHA256]::Create()
+  $BaseFull = [System.IO.Path]::GetFullPath($BasePath)
+  $BaseUri = New-Object System.Uri(($BaseFull.TrimEnd('\') + '\'))
 
   foreach ($PathValue in $Paths) {
     if (-not (Test-Path -LiteralPath $PathValue)) {
       continue
     }
 
-    $Dirty = Get-ChildItem -LiteralPath $PathValue -Force | Where-Object { $_.Name -ne ".gitkeep" }
-    if ($Dirty) {
-      throw ("Expected only .gitkeep under {0}; found {1}" -f $PathValue, (($Dirty | Select-Object -ExpandProperty Name) -join ", "))
+    Get-ChildItem -LiteralPath $PathValue -Recurse -File -Force | Sort-Object FullName | ForEach-Object {
+      $Stream = [System.IO.File]::Open($_.FullName, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+      try {
+        $Bytes = $Sha256.ComputeHash($Stream)
+      } finally {
+        $Stream.Dispose()
+      }
+      $Hash = ([System.BitConverter]::ToString($Bytes)).Replace("-", "")
+      $ChildUri = New-Object System.Uri([System.IO.Path]::GetFullPath($_.FullName))
+      $RelativePath = [System.Uri]::UnescapeDataString($BaseUri.MakeRelativeUri($ChildUri).ToString()).Replace('/', '\')
+      $Snapshot += [pscustomobject]@{
+        path = $RelativePath
+        length = $_.Length
+        lastWriteUtc = $_.LastWriteTimeUtc.ToString("o")
+        hash = $Hash
+      }
     }
+  }
+
+  $Sha256.Dispose()
+  return $Snapshot
+}
+
+function Assert-SnapshotUnchanged {
+  param(
+    [object[]]$Before,
+    [object[]]$After
+  )
+
+  $BeforeJson = ($Before | ConvertTo-Json -Depth 10 -Compress)
+  $AfterJson = ($After | ConvertTo-Json -Depth 10 -Compress)
+  if ($BeforeJson -ne $AfterJson) {
+    throw "Smoke test should not modify the source root runtime state."
   }
 }
 
 Write-Output "A-Brain smoke test"
 Write-Output ("source root: {0}" -f $Root)
 Write-Output ("temp root: {0}" -f $TempRoot)
+
+$SourceRuntimePaths = @(
+  (Join-Path $Root "diary\events"),
+  (Join-Path $Root "diary\turns"),
+  (Join-Path $Root "diary\sessions"),
+  (Join-Path $Root "ingest\runs"),
+  (Join-Path $Root "ingest\manifests"),
+  (Join-Path $Root "think\indexes"),
+  (Join-Path $Root "think\reports"),
+  (Join-Path $Root "dream\reports"),
+  (Join-Path $Root "dream\review\reports"),
+  (Join-Path $Root "dream\lint"),
+  (Join-Path $Root "dream\correction"),
+  (Join-Path $Root "learn\candidates"),
+  (Join-Path $Root "learn\promoted"),
+  (Join-Path $Root "knowledge\skills")
+)
+$SourceSnapshotBefore = Get-DirectorySnapshot -BasePath $Root -Paths $SourceRuntimePaths
 
 Copy-Item -LiteralPath $Root -Destination $TempRoot -Recurse -Force
 
@@ -227,23 +305,8 @@ sourceHashes: []
   Assert-JsonParse -BasePath $TempRoot
 
   Pop-Location
-
-  Assert-OnlyGitkeep -Paths @(
-    (Join-Path $Root "diary\events"),
-    (Join-Path $Root "diary\turns"),
-    (Join-Path $Root "diary\sessions"),
-    (Join-Path $Root "ingest\runs"),
-    (Join-Path $Root "ingest\manifests"),
-    (Join-Path $Root "think\indexes"),
-    (Join-Path $Root "think\reports"),
-    (Join-Path $Root "dream\reports"),
-    (Join-Path $Root "dream\review\reports"),
-    (Join-Path $Root "dream\lint"),
-    (Join-Path $Root "dream\correction"),
-    (Join-Path $Root "learn\candidates"),
-    (Join-Path $Root "learn\promoted"),
-    (Join-Path $Root "knowledge\skills")
-  )
+  $SourceSnapshotAfter = Get-DirectorySnapshot -BasePath $Root -Paths $SourceRuntimePaths
+  Assert-SnapshotUnchanged -Before $SourceSnapshotBefore -After $SourceSnapshotAfter
 
   Write-Output "A-Brain smoke test passed."
   Write-Output ("temp root: {0}" -f $TempRoot)

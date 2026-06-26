@@ -11,6 +11,25 @@
 
 默认在成功后删除临时副本。排查问题时可以使用 `-KeepTemp` 保留现场。
 
+## 初始化
+
+```powershell
+.\scripts\bootstrap-init.cmd -ProjectTitle "Main Workspace" -ProjectPath "C:\path\to\workspace"
+.\scripts\bootstrap-init.cmd -ProjectTitle "Main Workspace" -ProjectPath "C:\path\to\workspace" -UseExamples
+.\scripts\bootstrap-init.cmd -RunMaintain
+```
+
+把初始化需要的几步常用动作串起来，包括：
+
+- 写入第一条 `task_start` diary event
+- 派生 `turn` / `session`
+- 按参数创建第一份 `knowledge/projects` 页面
+- 可选导入 `examples/` 里的 sample source / sample note
+- 运行 `think-refresh`、`think-health`
+- 使用 `-UseExamples` 或显式指定 `-RunMaintain` 时，补跑一轮 `dream-maintain`
+
+如果只想手动做最小初始化，也可以继续单独使用 `diary-event`、`think-refresh` 和 `think-health`。
+
 ## 日常循环
 
 这些命令适合接入每一轮任务循环。
